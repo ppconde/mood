@@ -1,11 +1,11 @@
-import { OpenAI } from 'langchain/llms/openai';
+import { OpenAI } from '@langchain/openai';
 import z from 'zod';
-import { StructuredOutputParser } from 'langchain/output_parsers';
-import { PromptTemplate } from 'langchain/prompts';
-import { Document } from 'langchain/document';
+import { PromptTemplate } from '@langchain/core/prompts';
+import { Document } from '@langchain/core/documents';
 import { loadQARefineChain } from 'langchain/chains';
-import { OpenAIEmbeddings } from 'langchain/embeddings/openai';
+import { OpenAIEmbeddings } from '@langchain/openai'
 import { MemoryVectorStore } from 'langchain/vectorstores/memory';
+import { StructuredOutputParser } from 'langchain/output_parsers';
 
 
 const parser = StructuredOutputParser.fromZodSchema(
@@ -25,6 +25,11 @@ const parser = StructuredOutputParser.fromZodSchema(
         color: z
             .string()
             .describe('An hexadecimal color code that represents the mood of the entry. Example #101fe for blue representing happiness.'),
+        sentimentScore: z
+            .number()
+            .describe(
+                'sentiment of the text and rated on a scale from -10 to 10, where -10 is extremely negative, 0 is neutral, and 10 is extremely positive.'
+            ),
     })
 );
 
@@ -61,7 +66,7 @@ export const analyze = async (content: string) => {
     }
 }
 
-const qa = async (question, entries) => {
+export const qa = async (question, entries) => {
     const docs = entries.map((entry) => {
         return new Document({
             pageContent: entry.content,
@@ -78,7 +83,7 @@ const qa = async (question, entries) => {
     });
 
     const chain = loadQARefineChain(model);
-    const embeddings = new OpenAIEmbeddings(model);
+    const embeddings = new OpenAIEmbeddings();
     const store = await MemoryVectorStore.fromDocuments(docs, embeddings);
     const relevantDocs = await store.similaritySearch(question);
     const res = await chain.invoke({
