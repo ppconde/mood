@@ -4,6 +4,9 @@ import { prisma } from "@/utils/db";
 import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 
+/**
+ * Create a new journal entry and analyses it with the AI
+ */
 export const POST = async () => {
     const user = await getUserByClerkId();
     const entry = await prisma.journalEntry.create({
